@@ -12,16 +12,24 @@ const inputMessage = ref('')
 // 消息容器ref
 const messagesContainer = ref(null)
 
-// 发送消息
+// 发送消息（使用流式对话）
 const sendMessage = async () => {
   if (!inputMessage.value.trim()) return
   
   const message = inputMessage.value
   inputMessage.value = ''
   
-  await chatStore.sendMessage(message)
-  // 滚动到底部
-  scrollToBottom()
+  // 使用流式对话，在收到每个内容分片时滚动到底部
+  await chatStore.sendStreamMessage(
+    message,
+    'Qwen/Qwen2.5-7B-Instruct',
+    0.7,
+    2048,
+    (chunk) => {
+      // 每收到一个内容分片就滚动到底部，实现实时跟随效果
+      scrollToBottom()
+    }
+  )
 }
 
 // 处理按键事件
@@ -72,9 +80,10 @@ onMounted(() => {
         <div v-if="chatStore.messages.length === 0" class="empty-chat">
           <div class="welcome-icon">🤖</div>
           <h2>欢迎使用 SynapseAI</h2>
-          <p>开始与AI助手对话吧！</p>
+          <p>体验流式对话，AI 回复逐字呈现！</p>
           <div class="tips">
             <p>💡 提示：按 Enter 发送消息</p>
+            <p>⚡ 流式响应：实时看到 AI 的思考过程</p>
           </div>
         </div>
         <div v-else class="messages">
@@ -83,10 +92,15 @@ onMounted(() => {
             :key="index" 
             :class="['message', message.role]"
           >
-            <div class="message-content">{{ message.content }}</div>
+            <div class="message-content">
+              {{ message.content }}
+              <!-- 流式输入时显示闪烁光标 -->
+              <span v-if="message.streaming" class="streaming-cursor">▊</span>
+            </div>
             <div class="message-meta">
               <span class="time">{{ message.time }}</span>
               <span v-if="message.model" class="model">{{ message.model }}</span>
+              <span v-if="message.streaming" class="streaming-indicator">正在输入...</span>
             </div>
           </div>
         </div>
@@ -202,16 +216,20 @@ onMounted(() => {
 
 .tips {
   margin-top: 20px;
-  padding: 12px 20px;
+  padding: 16px 24px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .tips p {
   margin: 0;
   font-size: 0.9rem;
   color: #666;
+  line-height: 1.5;
 }
 
 .messages {
@@ -278,6 +296,30 @@ onMounted(() => {
 
 .message.assistant .message-meta {
   color: #888;
+}
+
+.streaming-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
+  color: #667eea;
+  font-weight: bold;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.streaming-indicator {
+  color: #667eea;
+  font-weight: 500;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .input-container {
