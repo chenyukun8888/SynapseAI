@@ -13,7 +13,7 @@
     
     <groupId>cn.chenyukun</groupId>
     <artifactId>synapse-ai</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>2.0.0</version>
     <packaging>pom</packaging>
     <name>SynapseAI</name>
     <description>SynapseAI - Intelligent Assistant</description>
@@ -21,6 +21,7 @@
     <modules>
         <module>Synapse-infrastructure</module>
         <module>Synapse-module-llm</module>
+        <module>Synapse-module-agent</module>
         <module>Synapse-app</module>
     </modules>
     

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.chenyukun.synapse.module.agent.mapper.AgentVersionMapper">
+
+    <resultMap id="BaseResultMap" type="cn.chenyukun.synapse.module.agent.model.entity.AgentVersionEntity">
+        <id column="id" property="id"/>
+        <result column="agent_id" property="agentId"/>
+        <result column="name" property="name"/>
+        <result column="avatar" property="avatar"/>
+        <result column="description" property="description"/>
+        <result column="version_number" property="versionNumber"/>
+        <result column="system_prompt" property="systemPrompt"/>
+        <result column="welcome_message" property="welcomeMessage"/>
+        <result column="model_config" property="modelConfig" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="tools" property="tools" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="knowledge_base_ids" property="knowledgeBaseIds" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="change_log" property="changeLog"/>
+        <result column="agent_type" property="agentType"/>
+        <result column="publish_status" property="publishStatus"/>
+        <result column="reject_reason" property="rejectReason"/>
+        <result column="review_time" property="reviewTime"/>
+        <result column="published_at" property="publishedAt"/>
+        <result column="user_id" property="userId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+
+    <select id="selectByAgentId" resultMap="BaseResultMap">
+        SELECT * FROM agent_versions
+        WHERE agent_id = #{agentId}
+        AND deleted_at IS NULL
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="selectByAgentIdAndVersionNumber" resultMap="BaseResultMap">
+        SELECT * FROM agent_versions
+        WHERE agent_id = #{agentId}
+        AND version_number = #{versionNumber}
+        AND deleted_at IS NULL
+        LIMIT 1
+    </select>
+
+    <select id="selectLatestByAgentId" resultMap="BaseResultMap">
+        SELECT * FROM agent_versions
+        WHERE agent_id = #{agentId}
+        AND deleted_at IS NULL
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectPublishedVersions" resultMap="BaseResultMap">
+        SELECT * FROM agent_versions
+        WHERE publish_status = 2
+        AND deleted_at IS NULL
+        <if test="name != null and name != ''">
+            AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        ORDER BY published_at DESC
+    </select>
+
+</mapper>
+

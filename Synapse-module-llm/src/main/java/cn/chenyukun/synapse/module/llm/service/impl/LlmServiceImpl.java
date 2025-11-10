@@ -3,16 +3,11 @@ package cn.chenyukun.synapse.module.llm.service.impl;
 import cn.chenyukun.synapse.infrastructure.external.llm.SiliconFlowClient;
 import cn.chenyukun.synapse.infrastructure.external.llm.dto.LlmRequest;
 import cn.chenyukun.synapse.infrastructure.external.llm.dto.LlmResponse;
-import cn.chenyukun.synapse.module.llm.converter.LlmMessageConverter;
 import cn.chenyukun.synapse.module.llm.enums.MessageRole;
-import cn.chenyukun.synapse.module.llm.mapper.LlmMessageMapper;
 import cn.chenyukun.synapse.module.llm.model.dto.ChatRequest;
 import cn.chenyukun.synapse.module.llm.model.dto.ChatResponse;
-import cn.chenyukun.synapse.module.llm.model.entity.LlmMessageEntity;
-import cn.chenyukun.synapse.module.llm.model.vo.MessageVO;
 import cn.chenyukun.synapse.module.llm.service.LlmService;
 import cn.hutool.core.util.IdUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,7 +17,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * LLM 服务实现
+ * LLM 服务实现（v1.x 兼容接口 - 无会话，不持久化）
+ * 注意：此接口仅用于向后兼容，建议使用 v2.0 的会话接口
  */
 @Service
 public class LlmServiceImpl implements LlmService {
@@ -33,22 +29,11 @@ public class LlmServiceImpl implements LlmService {
     @Resource
     private SiliconFlowClient siliconFlowClient;
     
-    @Resource
-    private LlmMessageMapper messageMapper;
-    
     @Override
     public ChatResponse chat(ChatRequest request) {
-        logger.info("处理聊天请求: {}", request.getMessage());
+        logger.info("处理聊天请求（无会话模式）: {}", request.getMessage());
         
-        // 1. 保存用户消息
-        LlmMessageEntity userMessage = new LlmMessageEntity();
-        userMessage.setMessageId(IdUtil.simpleUUID());
-        userMessage.setRole(MessageRole.USER.getCode());
-        userMessage.setContent(request.getMessage());
-        userMessage.setCreatedAt(new Date());
-        messageMapper.insert(userMessage);
-        
-        // 2. 调用 LLM
+        // 1. 调用 LLM（无会话，不持久化）
         LlmRequest llmRequest = new LlmRequest();
         llmRequest.addUserMessage(request.getMessage());
         llmRequest.setModel(request.getModel());
@@ -57,25 +42,13 @@ public class LlmServiceImpl implements LlmService {
         
         LlmResponse llmResponse = siliconFlowClient.chat(llmRequest);
         
-        // 3. 保存助手消息
-        LlmMessageEntity assistantMessage = new LlmMessageEntity();
-        assistantMessage.setMessageId(IdUtil.simpleUUID());
-        assistantMessage.setRole(MessageRole.ASSISTANT.getCode());
-        assistantMessage.setContent(llmResponse.getContent());
-        assistantMessage.setModel(llmResponse.getModel());
-        if (llmResponse.getTokenUsage() != null) {
-            assistantMessage.setTokensUsed(llmResponse.getTokenUsage().getTotal());
-        }
-        assistantMessage.setCreatedAt(new Date());
-        messageMapper.insert(assistantMessage);
-        
-        // 4. 构造响应
+        // 2. 构造响应
         ChatResponse response = new ChatResponse();
-        response.setId(assistantMessage.getMessageId());
+        response.setId(IdUtil.simpleUUID());
         response.setRole(MessageRole.ASSISTANT.getCode());
         response.setContent(llmResponse.getContent());
         response.setModel(llmResponse.getModel());
-        response.setCreatedAt(dateFormat.format(assistantMessage.getCreatedAt()));
+        response.setCreatedAt(dateFormat.format(new Date()));
         
         if (llmResponse.getTokenUsage() != null) {
             ChatResponse.TokensUsed tokensUsed = new ChatResponse.TokensUsed(
@@ -91,46 +64,23 @@ public class LlmServiceImpl implements LlmService {
     
     @Override
     public Map<String, Object> getHistory(Integer limit, Integer offset) {
-        if (limit == null || limit <= 0) {
-            limit = 20;
-        }
-        if (limit > 100) {
-            limit = 100;
-        }
-        if (offset == null || offset < 0) {
-            offset = 0;
-        }
+        logger.info("获取聊天历史（v1.x 无会话模式，无持久化）");
         
-        // 查询总数
-        Long total = messageMapper.selectCount(null);
-        
-        // 分页查询
-        QueryWrapper<LlmMessageEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.orderByDesc("created_at");
-        queryWrapper.last("LIMIT " + limit + " OFFSET " + offset);
-        
-        List<LlmMessageEntity> entities = messageMapper.selectList(queryWrapper);
-        
-        // 转换为 VO
-        List<MessageVO> messages = new ArrayList<>();
-        for (LlmMessageEntity entity : entities) {
-            messages.add(LlmMessageConverter.toVO(entity));
-        }
-        
-        // 构造响应
+        // v2.0: 无会话模式不保存历史，返回空数据
         Map<String, Object> result = new HashMap<>();
-        result.put("total", total);
-        result.put("limit", limit);
-        result.put("offset", offset);
-        result.put("messages", messages);
+        result.put("total", 0);
+        result.put("limit", limit != null ? limit : 20);
+        result.put("offset", offset != null ? offset : 0);
+        result.put("messages", new ArrayList<>());
+        result.put("note", "v1.x 兼容接口无会话模式，不保存历史。请使用 v2.0 会话接口。");
         
         return result;
     }
     
     @Override
     public int clearHistory() {
-        logger.info("清除聊天历史");
-        return messageMapper.delete(null);
+        logger.info("清除聊天历史（v1.x 无会话模式，无历史可清除）");
+        return 0;
     }
     
     @Override

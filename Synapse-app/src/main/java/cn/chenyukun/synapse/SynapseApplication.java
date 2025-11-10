@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * SynapseAI 主启动类
  */
 @SpringBootApplication
-@MapperScan("cn.chenyukun.synapse.module.llm.mapper")
+@MapperScan({"cn.chenyukun.synapse.module.llm.mapper", "cn.chenyukun.synapse.module.agent.mapper"})
 public class SynapseApplication {
     
     public static void main(String[] args) {

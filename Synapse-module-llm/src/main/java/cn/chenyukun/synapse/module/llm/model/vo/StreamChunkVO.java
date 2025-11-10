@@ -23,6 +23,11 @@ public class StreamChunkVO {
     private String model;
 
     /**
+     * 会话ID（start事件）
+     */
+    private String sessionId;
+
+    /**
      * 文本内容分片（chunk事件）
      */
     private String content;
@@ -63,13 +68,21 @@ public class StreamChunkVO {
     /**
      * 创建 start 事件
      */
-    public static StreamChunkVO createStart(String messageId, String model, String timestamp) {
+    public static StreamChunkVO createStart(String messageId, String model, String sessionId, String timestamp) {
         StreamChunkVO chunk = new StreamChunkVO();
         chunk.type = "start";
         chunk.messageId = messageId;
         chunk.model = model;
+        chunk.sessionId = sessionId;
         chunk.timestamp = timestamp;
         return chunk;
+    }
+
+    /**
+     * 创建 start 事件（简化版本，自动生成时间戳）
+     */
+    public static StreamChunkVO start(String messageId, String model, String sessionId) {
+        return createStart(messageId, model, sessionId, String.valueOf(System.currentTimeMillis()));
     }
 
     /**
@@ -81,6 +94,13 @@ public class StreamChunkVO {
         chunk.content = content;
         chunk.index = index;
         return chunk;
+    }
+
+    /**
+     * 创建 chunk 事件（简化版本）
+     */
+    public static StreamChunkVO chunk(String content, Integer index) {
+        return createChunk(content, index);
     }
 
     /**
@@ -96,6 +116,14 @@ public class StreamChunkVO {
     }
 
     /**
+     * 创建 done 事件（简化版本，兼容 LlmResponse.TokenUsage）
+     */
+    public static StreamChunkVO done(cn.chenyukun.synapse.infrastructure.external.llm.dto.LlmResponse.TokenUsage usage, String finishReason) {
+        TokenUsage tokenUsage = new TokenUsage(usage.getInput(), usage.getOutput(), usage.getTotal());
+        return createDone(tokenUsage, finishReason, String.valueOf(System.currentTimeMillis()));
+    }
+
+    /**
      * 创建 error 事件
      */
     public static StreamChunkVO createError(Integer code, String message, String timestamp) {
@@ -105,6 +133,13 @@ public class StreamChunkVO {
         chunk.message = message;
         chunk.timestamp = timestamp;
         return chunk;
+    }
+
+    /**
+     * 创建 error 事件（简化版本）
+     */
+    public static StreamChunkVO error(Integer code, String message) {
+        return createError(code, message, String.valueOf(System.currentTimeMillis()));
     }
 
     /**
@@ -180,6 +215,14 @@ public class StreamChunkVO {
 
     public void setModel(String model) {
         this.model = model;
+    }
+
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 
     public String getContent() {

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.chenyukun.synapse.module.agent.mapper.AgentMapper">
+
+    <resultMap id="BaseResultMap" type="cn.chenyukun.synapse.module.agent.model.entity.AgentEntity">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="avatar" property="avatar"/>
+        <result column="description" property="description"/>
+        <result column="system_prompt" property="systemPrompt"/>
+        <result column="welcome_message" property="welcomeMessage"/>
+        <result column="model_config" property="modelConfig" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="tools" property="tools" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="knowledge_base_ids" property="knowledgeBaseIds" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="published_version" property="publishedVersion"/>
+        <result column="enabled" property="enabled"/>
+        <result column="agent_type" property="agentType"/>
+        <result column="user_id" property="userId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT * FROM agents
+        WHERE user_id = #{userId}
+        AND deleted_at IS NULL
+        ORDER BY updated_at DESC
+    </select>
+
+    <select id="selectByUserIdAndName" resultMap="BaseResultMap">
+        SELECT * FROM agents
+        WHERE user_id = #{userId}
+        AND deleted_at IS NULL
+        <if test="name != null and name != ''">
+            AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        ORDER BY updated_at DESC
+    </select>
+
+    <select id="selectWorkspaceAgentsByUserId" resultMap="BaseResultMap">
+        SELECT a.* FROM agents a
+        INNER JOIN agent_workspace aw ON a.id = aw.agent_id
+        WHERE aw.user_id = #{userId}
+        AND a.deleted_at IS NULL
+        ORDER BY aw.created_at DESC
+    </select>
+
+    <select id="selectPublishedAgents" resultMap="BaseResultMap">
+        SELECT a.* FROM agents a
+        INNER JOIN agent_versions av ON a.published_version = av.id
+        WHERE av.publish_status = 2
+        AND a.deleted_at IS NULL
+        AND av.deleted_at IS NULL
+        <if test="name != null and name != ''">
+            AND a.name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        ORDER BY av.published_at DESC
+    </select>
+
+</mapper>
+
