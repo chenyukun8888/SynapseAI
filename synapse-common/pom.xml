@@ -3,47 +3,28 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>cn.chenyukun</groupId>
         <artifactId>synapse-ai</artifactId>
         <version>2.0.0</version>
     </parent>
-    
-    <artifactId>Synapse-module-llm</artifactId>
-    <name>Synapse-module-llm</name>
-    <description>LLM模块 - 对话业务逻辑</description>
-    
+
+    <artifactId>synapse-common</artifactId>
+    <name>synapse-common</name>
+    <description>通用模块</description>
+    <packaging>jar</packaging>
+
     <dependencies>
-        <!-- Infrastructure Module -->
-        <dependency>
-            <groupId>cn.chenyukun</groupId>
-            <artifactId>Synapse-infrastructure</artifactId>
-            <version>2.0.0</version>
-        </dependency>
-        
-        <!-- Spring Boot Web -->
+        <!-- Spring Boot Web Starter for annotations like @Component -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        
-        <!-- Validation -->
+        <!-- For validation annotations like @NotNull, @Valid etc. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-        
-        <!-- MyBatis Plus -->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-        </dependency>
-        
-        <!-- Hutool -->
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
         </dependency>
     </dependencies>
 
@@ -67,4 +48,3 @@
         </plugins>
     </build>
 </project>
-

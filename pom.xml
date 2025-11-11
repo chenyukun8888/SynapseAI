@@ -23,6 +23,7 @@
         <module>Synapse-module-llm</module>
         <module>Synapse-module-agent</module>
         <module>Synapse-app</module>
+        <module>synapse-common</module>
     </modules>
     
     <properties>
